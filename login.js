@@ -1,0 +1,2 @@
+import {json,issueCookie,secureCompare} from '../../_lib/util.js';
+export async function onRequestPost({request,env}){if(!env.ADMIN_PASSWORD||!env.ADMIN_SECRET)return json({error:'尚未設定管理密碼與登入金鑰'},503);let b;try{b=await request.json()}catch{return json({error:'輸入格式錯誤'},400)}if(!secureCompare(String(b.password||''),env.ADMIN_PASSWORD))return json({error:'密碼不正確'},401);return json({ok:true},200,{'Set-Cookie':await issueCookie(env.ADMIN_SECRET)})}
