@@ -6,7 +6,7 @@ export function secureCompare(a,b){ if(!a||!b||a.length!==b.length)return false;
 const enc = new TextEncoder();
 function b64(bytes){return btoa(String.fromCharCode(...bytes)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 async function sign(msg,secret){const k=await crypto.subtle.importKey('raw',enc.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return b64(new Uint8Array(await crypto.subtle.sign('HMAC',k,enc.encode(msg))))}
-export async function issueCookie(secret){const exp=Date.now()+8*60*60*1000;const msg=`admin.${exp}`;const sig=await sign(msg,secret);return `gy_admin=${msg}.${sig}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=28800`}
+export async function issueCookie(secret,request){const exp=Date.now()+8*60*60*1000;const msg=`admin.${exp}`;const sig=await sign(msg,secret);return `gy_admin=${msg}.${sig}; Path=/; HttpOnly; ${new URL(request.url).hostname==='localhost'?'':'Secure; '}SameSite=Strict; Max-Age=28800`}
 export async function isAdmin(request,env){if(!env.ADMIN_SECRET||!env.ADMIN_PASSWORD)return false;const cookie=request.headers.get('cookie')||'';const v=cookie.split(';').map(x=>x.trim()).find(x=>x.startsWith('gy_admin='))?.slice(9);if(!v)return false;const m=/^admin\.(\d+)\.([a-zA-Z0-9_-]+)$/.exec(v);if(!m||Number(m[1])<Date.now())return false;const expected=await sign(`admin.${m[1]}`,env.ADMIN_SECRET);return secureCompare(expected,m[2]);}
 export async function requireAdmin(ctx){return (await isAdmin(ctx.request,ctx.env))?null:json({error:'請先登入管理後台'},401)}
 export const err = (e)=>json({error:'伺服器暫時無法處理，請確認 D1 綁定及資料表已建立。'},503);

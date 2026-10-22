@@ -1,1 +1,15 @@
 .DS_Store
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.wrangler/
+node_modules/
+*.bak
+*.cookie-backup
+wrangler.local.jsonc
+
+*.local-backup
+
+*.local-backup
+
+wrangler.jsonc
